@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    h1{text-align: center;}
+    .disp{width:205px; height:40px; margin-top:3px;}
+    .disp{font-family: "Oxanium", sans-serif; font-size: 22pt; text-align: right; }
+    /*type이 button인 input태그만 가져오기*/
+    input[type=button]{width:50px; height:50px; text-align: center; vertical-align: middle;
+    margin-top: 5px; }
+    #calc{width: 220px; margin-left: auto; margin-right: auto;}
+</style>
+<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function(){
+        // 1. 숫자 버튼을 눌렀을 때
+        $('.num').click(function(){
+            let cur = $('#disp2').val();
+            let n = $(this).val();
+            $("#disp2").val(cur + n);
+        });
+
+        // 2. 연산자,등호(=) 버튼을 눌렀을 때
+        $('.op').click(function(){
+            let cur = $('#disp2').val();
+            let opt = $(this).val();
+            
+            // '='가 아닐 경우: 연산자 기호를 뒤에 이어 붙이기
+            if (opt != "="){
+                 $("#disp2").val(cur + opt);
+            } 
+            // '='일 경우:직접 계산
+            else {
+                // 입력된 식을 disp1창에 위로 올려주기
+                $('#disp1').val(cur);
+                
+                let result = 0;
+
+                // 연산자 기호에 따라 split으로 쪼개고 형변환 후 계산
+                if (cur.includes('+')) {
+                    let nums = cur.split('+');
+                    result = Number(nums[0]) + Number(nums[1]);
+                } 
+                else if (cur.includes('-')) {
+                    let nums = cur.split('-');
+                    result = Number(nums[0]) - Number(nums[1]);
+                } 
+                else if (cur.includes('*')) {
+                    let nums = cur.split('*');
+                    result = Number(nums[0]) * Number(nums[1]);
+                } 
+                else if (cur.includes('/')) {
+                    let nums = cur.split('/');
+                    result = Number(nums[0]) / Number(nums[1]);
+                }
+
+                // 결과값을 disp2 창에 띄워주기
+                $('#disp2').val(result);
+            }
+        });
+
+        // 3. AC(초기화) 버튼을 눌렀을 때
+        $('.func').click(function(){
+            $('#disp1').val(''); // 첫 번째 디스플레이창 비우기
+            $('#disp2').val(''); // 두 번째 디스플레이창 비우기    
+        });
+    });
+</script>
+<body>
+    <h1>계산기</h1>
+    <div id="calc">
+        <div>
+            <input type="text" class="disp" id="disp1" readonly>
+            <input type="text" class="disp" id="disp2" readonly>
+        </div>
+            <input type="button" class="num" value="7">
+            <input type="button" class="num" value="8">
+            <input type="button" class="num" value="9">
+            <input type="button" class="op" value="+">
+            
+            <input type="button" class="num" value="4">
+            <input type="button" class="num" value="5">
+            <input type="button" class="num" value="6">
+            <input type="button" class="op" value="-">
+
+            
+            <input type="button" class="num" value="1">
+            <input type="button" class="num" value="2">
+            <input type="button" class="num" value="3">
+            <input type="button" class="op" value="*">
+
+            
+            <input type="button" class="func" value="AC">
+            <input type="button" class="num" value="0">
+            <input type="button" class="op" value="=">
+            <input type="button" class="op" value="/">
+    </div>
+</body>
+</html>
