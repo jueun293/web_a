@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모던 웹 계산기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700&family=Pretendard:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #2d3436;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+        }
+        #calc {
+            width: 310px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+        .disp-box {
+            background: #f8f9fa;
+            padding: 16px 18px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #edf2f7;
+        }
+        .disp {
+            width: 100%;
+            border: none;
+            text-align: right;
+            font-family: "Oxanium", sans-serif;
+            background: transparent;
+            outline: none;
+        }
+        #disp1 {
+            height: 22px;
+            font-size: 0.95rem;
+            color: #868e96;
+            margin-bottom: 4px;
+        }
+        #disp2 {
+            height: 42px;
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #212529;
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        input[type=button] {
+            height: 58px;
+            font-family: "Oxanium", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #343a40;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.08);
+            transition: all 0.15s ease;
+        }
+        input[type=button]:hover {
+            transform: translateY(-2px);
+            background: #f8f9fa;
+        }
+        input[type=button]:active {
+            transform: translateY(1px) scale(0.96);
+        }
+        input[type=button].func {
+            background: #eef2f6;
+            color: #495057;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+        input[type=button].func-ac {
+            background: #ffe3e3;
+            color: #e03131;
+        }
+        input[type=button].op {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        input[type=button].equal {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.35);
+        }
+        input[type=button].zero {
+            grid-column: span 2;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            let currentInput = "0";
+            let firstNum = null;
+            let operator = null;
+            let waitingForOperand = false;
+
+            function updateDisplay() {
+                $('#disp2').val(currentInput);
+            }
+
+            $('.num').click(function(){
+                let n = $(this).val();
+                if (waitingForOperand) {
+                    currentInput = n;
+                    waitingForOperand = false;
+                } else {
+                    currentInput = (currentInput === "0") ? n : currentInput + n;
+                }
+                updateDisplay();
+            });
+
+            $('.dot').click(function(){
+                if (waitingForOperand) {
+                    currentInput = "0.";
+                    waitingForOperand = false;
+                } else if (!currentInput.includes('.')) {
+                    currentInput += ".";
+                }
+                updateDisplay();
+            });
+
+            $('.op').not('.equal').click(function(){
+                let inputValue = Number(currentInput);
+                if (operator && waitingForOperand) {
+                    operator = $(this).val();
+                    $('#disp1').val(firstNum + " " + operator);
+                    return;
+                }
+                if (firstNum === null) {
+                    firstNum = inputValue;
+                } else if (operator) {
+                    let result = calculate(firstNum, inputValue, operator);
+                    firstNum = result;
+                    currentInput = String(result);
+                    updateDisplay();
+                }
+                operator = $(this).val();
+                $('#disp1').val(firstNum + " " + operator);
+                waitingForOperand = true;
+            });
+
+            $('.equal').click(function(){
+                let inputValue = Number(currentInput);
+                if (operator === null || waitingForOperand) return;
+                $('#disp1').val(firstNum + " " + operator + " " + currentInput + " =");
+                let result = calculate(firstNum, inputValue, operator);
+                currentInput = String(result);
+                updateDisplay();
+                firstNum = null;
+                operator = null;
+                waitingForOperand = true;
+            });
+
+            function calculate(n1, n2, op) {
+                if (op === '+') return n1 + n2;
+                if (op === '-') return n1 - n2;
+                if (op === '*') return n1 * n2;
+                if (op === '/') return n2 === 0 ? "Error" : Number((n1 / n2).toFixed(8));
+                return n2;
+            }
+
+            $('.func-ac').click(function(){
+                currentInput = "0";
+                firstNum = null;
+                operator = null;
+                waitingForOperand = false;
+                $('#disp1').val('');
+                updateDisplay();
+            });
+
+            $('.func-sign').click(function(){
+                if (currentInput === "0" || currentInput === "Error") return;
+                currentInput = String(Number(currentInput) * -1);
+                updateDisplay();
+            });
+
+            $('.func-percent').click(function(){
+                if (currentInput === "Error") return;
+                currentInput = String(Number(currentInput) / 100);
+                updateDisplay();
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>계산기</h1>
+    <div id="calc">
+        <div class="disp-box">
+            <input type="text" class="disp" id="disp1" readonly>
+            <input type="text" class="disp" id="disp2" value="0" readonly>
+        </div>
+        
+        <div class="btn-grid">
+            <input type="button" class="func func-ac" value="AC">
+            <input type="button" class="func func-sign" value="+/-">
+            <input type="button" class="func func-percent" value="%">
+            <input type="button" class="op" value="/">
+
+            <input type="button" class="num" value="7">
+            <input type="button" class="num" value="8">
+            <input type="button" class="num" value="9">
+            <input type="button" class="op" value="*">
+
+            <input type="button" class="num" value="4">
+            <input type="button" class="num" value="5">
+            <input type="button" class="num" value="6">
+            <input type="button" class="op" value="-">
+
+            <input type="button" class="num" value="1">
+            <input type="button" class="num" value="2">
+            <input type="button" class="num" value="3">
+            <input type="button" class="op" value="+">
+
+            <input type="button" class="num zero" value="0">
+            <input type="button" class="dot" value=".">
+            <input type="button" class="op equal" value="=">
+        </div>
+    </div>
+</body>
+</html>

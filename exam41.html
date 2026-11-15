@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고급 웹 계산기</title>
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Oxanium', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { margin-bottom: 10px; color: #333; }
+        #calc {
+            width: 240px;
+            background: #222;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .disp-box {
+            background: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .disp {
+            width: 100%;
+            height: 35px;
+            border: none;
+            text-align: right;
+            font-family: "Oxanium", sans-serif;
+            box-sizing: border-box;
+        }
+        #disp1 { font-size: 11pt; color: #77s7; background: transparent; }
+        #disp2 { font-size: 20pt; font-weight: bold; color: #222; background: transparent; }
+        
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        input[type=button] {
+            width: 50px;
+            height: 50px;
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: #e0e0e0;
+            transition: background 0.1s;
+        }
+        input[type=button]:hover { background: #d0d0d0; }
+        input[type=button].op { background: #ff9f0a; color: white; }
+        input[type=button].op:hover { background: #e08b00; }
+        input[type=button].func { background: #a6a6a5; color: white; }
+        input[type=button].func:hover { background: #919190; }
+        input[type=button].zero { width: 105px; }
+    </style>
+    <!-- 폰트 추가 -->
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600&display=swap" rel="stylesheet">
+</head>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function(){
+        let currentInput = "0"; // 현재 화면에 입력 중인 값
+        let firstNum = null;    // 첫 번째 피연산자
+        let operator = null;    // 저장된 연산자
+        let waitingForOperand = false; // 연산자 누른 직후 상태 체크
+
+        // 화면 갱신 함수
+        function updateDisplay() {
+            $('#disp2').val(currentInput);
+        }
+
+        // 1. 숫자 버튼을 눌렀을 때
+        $('.num').click(function(){
+            let n = $(this).val();
+
+            if (waitingForOperand) {
+                currentInput = n;
+                waitingForOperand = false;
+            } else {
+                // 초기에 '0'일 때 0을 누르면 여러 개 안 쌓이게 처리
+                if (currentInput === "0") {
+                    currentInput = n;
+                } else {
+                    currentInput += n;
+                }
+            }
+            updateDisplay();
+        });
+
+        // 2. 소수점(.) 버튼을 눌렀을 때
+        $('.dot').click(function(){
+            if (waitingForOperand) {
+                currentInput = "0.";
+                waitingForOperand = false;
+            } else if (!currentInput.includes('.')) {
+                currentInput += ".";
+            }
+            updateDisplay();
+        });
+
+        // 3. 연산자 (+, -, *, /) 버튼을 눌렀을 때
+        $('.op').click(function(){
+            let inputValue = Number(currentInput);
+
+            if (operator && waitingForOperand) {
+                operator = $(this).val();
+                $('#disp1').val(firstNum + " " + operator);
+                return;
+            }
+
+            if (firstNum === null) {
+                firstNum = inputValue;
+            } else if (operator) {
+                // 연속으로 연산자를 누를 때 중간 계산 수행 (예: 5 + 5 + -> 10 + 로 변경)
+                let result = calculate(firstNum, inputValue, operator);
+                firstNum = result;
+                currentInput = String(result);
+                updateDisplay();
+            }
+
+            operator = $(this).val();
+            $('#disp1').val(firstNum + " " + operator);
+            waitingForOperand = true;
+        });
+
+        // 4. 등호(=) 버튼을 눌렀을 때
+        $('.equal').click(function(){
+            let inputValue = Number(currentInput);
+
+            if (operator === null || waitingForOperand) return;
+
+            $('#disp1').val(firstNum + " " + operator + " " + currentInput + " =");
+            let result = calculate(firstNum, inputValue, operator);
+            
+            currentInput = String(result);
+            updateDisplay();
+
+            // 상태 초기화
+            firstNum = null;
+            operator = null;
+            waitingForOperand = true;
+        });
+
+        // 실제 계산을 수행하는 함수 (eval 금지 조건 충족!)
+        function calculate(n1, n2, op) {
+            if (op === '+') return n1 + n2;
+            if (op === '-') return n1 - n2;
+            if (op === '*') return n1 * n2;
+            if (op === '/') return n2 === 0 ? "Error" : n1 / n2;
+            return n2;
+        }
+
+        // 5. AC (모두 초기화) 버튼
+        $('.func-ac').click(function(){
+            currentInput = "0";
+            firstNum = null;
+            operator = null;
+            waitingForOperand = false;
+            $('#disp1').val('');
+            updateDisplay();
+        });
+    });
+</script>
+<body>
+    <h1>고급 웹 계산기</h1>
+    <div id="calc">
+        <div class="disp-box">
+            <input type="text" class="disp" id="disp1" readonly>
+            <input type="text" class="disp" id="disp2" value="0" readonly>
+        </div>
+        
+        <div class="btn-row">
+            <input type="button" class="func func-ac" value="AC">
+            <input type="button" class="func" value="+/-">
+            <input type="button" class="func" value="%">
+            <input type="button" class="op" value="/">
+        </div>
+        <div class="btn-row">
+            <input type="button" class="num" value="7">
+            <input type="button" class="num" value="8">
+            <input type="button" class="num" value="9">
+            <input type="button" class="op" value="*">
+        </div>
+        <div class="btn-row">
+            <input type="button" class="num" value="4">
+            <input type="button" class="num" value="5">
+            <input type="button" class="num" value="6">
+            <input type="button" class="op" value="-">
+        </div>
+        <div class="btn-row">
+            <input type="button" class="num" value="1">
+            <input type="button" class="num" value="2">
+            <input type="button" class="num" value="3">
+            <input type="button" class="op" value="+">
+        </div>
+        <div class="btn-row">
+            <input type="button" class="num zero" value="0">
+            <input type="button" class="dot" value=".">
+            <input type="button" class="op equal" value="=">
+        </div>
+    </div>
+</body>
+</html>
