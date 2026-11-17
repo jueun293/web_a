@@ -15,9 +15,20 @@ const server = http.createServer((req, res) => {
     //응답 본문
     //res.write("Hello, Node!!");
     //res.end(); //응답 종료
-    res.setHeader("Content-Type","text/html");
-    const readStream = fs.createReadStream(__dirname+ "/index.html", "utf8");
-    readStream.pipe(res); //file을 넘기면 res 출력하도록 file이 실제로 있어야함
+    //res.setHeader("Content-Type","text/html");
+    //const readStream = fs.createReadStream(__dirname+ "/index.html", "utf8");
+    //readStream.pipe(res); //file을 넘기면 res 출력하도록 file이 실제로 있어야함
+    const {method, url} =req;
+    if( method ==="GET" && url === "/home"){
+        res.statusCode =200;
+        res.end("Home");
+    }else if (method ==="GET" && url === "/about"){
+        res.statusCode =200;
+        res.end("About");
+    }else{
+        res.statusCode = 484;
+        res.end("NOT FOUND");
+    }
 });
 
 server.listen(PORT, () => {
